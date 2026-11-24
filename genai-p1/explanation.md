@@ -557,7 +557,6 @@ Conversation history and model streaming are separate concepts:
 -   **Conversation history** controls which previous messages are
     included in a request.
 
-------------------------------------------------------------------------
 
 ## 8. Key concepts recap
 
@@ -595,7 +594,6 @@ Conversation history and model streaming are separate concepts:
                                       included in later requests
   -----------------------------------------------------------------------
 
-------------------------------------------------------------------------
 
 ## 9. Final takeaway
 
