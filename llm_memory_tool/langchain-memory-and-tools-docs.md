@@ -2,10 +2,10 @@
 
 This documentation covers two small Node.js projects built with LangChain and Groq:
 
-| Project | File | What it demonstrates |
-|---|---|---|
-| **Project 1: Chat with Memory** | `index_1.js` | How an LLM "remembers" a conversation, with streamed token-by-token output |
-| **Project 2: Tool-Calling Agent** | `tools.js` | How an LLM can call your own functions (a mini calendar) through an agent |
+| Project                           | File         | What it demonstrates                                                       |
+| --------------------------------- | ------------ | -------------------------------------------------------------------------- |
+| **Project 1: Chat with Memory**   | `index_1.js` | How an LLM "remembers" a conversation, with streamed token-by-token output |
+| **Project 2: Tool-Calling Agent** | `tools.js`   | How an LLM can call your own functions (a mini calendar) through an agent  |
 
 Each project is explained with its requirements, general syntax, a line-by-line walkthrough, and the concepts behind it. A final section shows how the two ideas combine.
 
@@ -35,12 +35,12 @@ Each project is explained with its requirements, general syntax, a line-by-line 
 
 ### 1.2 Dependencies
 
-| Package | Version used | Role |
-|---|---|---|
-| `langchain` | ^1.6.8 | Main framework. Provides `createAgent` (agent loop) and `tool` (tool wrapper). Built on LangGraph internally. |
-| `@langchain/groq` | ^1.3.2 | Integration for Groq-hosted models. Provides the `ChatGroq` class. |
-| `zod` | ^4.6.7 | Schema library. Describes the arguments a tool accepts. |
-| `dotenv` | ^18.0.10 | Loads variables from a `.env` file into `process.env`. |
+| Package           | Version used | Role                                                                                                          |
+| ----------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| `langchain`       | ^1.6.8       | Main framework. Provides `createAgent` (agent loop) and `tool` (tool wrapper). Built on LangGraph internally. |
+| `@langchain/groq` | ^1.3.2       | Integration for Groq-hosted models. Provides the `ChatGroq` class.                                            |
+| `zod`             | ^4.6.7       | Schema library. Describes the arguments a tool accepts.                                                       |
+| `dotenv`          | ^18.0.10     | Loads variables from a `.env` file into `process.env`.                                                        |
 
 Built-in Node modules (no install): `readline/promises` for terminal input, and `process` for stdin/stdout.
 
@@ -71,7 +71,6 @@ groq_api_key=your_api_key_here
 
 The code reads it with `process.env.groq_api_key`. The name in `.env` must match exactly (it is case-sensitive).
 
-
 ### 1.5 Running
 
 ```bash
@@ -94,12 +93,12 @@ A Large Language Model takes a list of messages as input and returns a new messa
 
 Every message has a `role` and `content`:
 
-| Role | Meaning |
-|---|---|
-| `system` | Standing instructions ("You are a helpful assistant…"). Optional. |
-| `user` | What the human typed. |
-| `assistant` | What the model replied. |
-| `tool` | The result of a tool call (used in agents). |
+| Role        | Meaning                                                           |
+| ----------- | ----------------------------------------------------------------- |
+| `system`    | Standing instructions ("You are a helpful assistant…"). Optional. |
+| `user`      | What the human typed.                                             |
+| `assistant` | What the model replied.                                           |
+| `tool`      | The result of a tool call (used in agents).                       |
 
 ```js
 { role: "user", content: "Hello!" }
@@ -109,29 +108,29 @@ Every message has a `role` and `content`:
 
 It is a plain JavaScript **object** with two properties:
 
-| Property | Meaning | In the code |
-|---|---|---|
-| `role` | **Who is speaking** in this message | `"user"` = the human at the keyboard |
-| `content` | **What was said** (the text) | `userinput`, the variable holding whatever the person just typed |
+| Property  | Meaning                             | In the code                                                      |
+| --------- | ----------------------------------- | ---------------------------------------------------------------- |
+| `role`    | **Who is speaking** in this message | `"user"` = the human at the keyboard                             |
+| `content` | **What was said** (the text)        | `userinput`, the variable holding whatever the person just typed |
 
-So `{ role: "user", content: userinput }` literally means *"the user said: (whatever they typed)"*. If the user types `hi`, the object becomes `{ role: "user", content: "hi" }`.
+So `{ role: "user", content: userinput }` literally means _"the user said: (whatever they typed)"_. If the user types `hi`, the object becomes `{ role: "user", content: "hi" }`.
 
-This is the standard **chat message format** used by nearly every LLM API. It tells the model *who said what*, so it can tell your questions apart from its own earlier answers. LangChain accepts these plain objects directly and converts them internally into message classes. You can write the same message with the classes if you prefer:
+This is the standard **chat message format** used by nearly every LLM API. It tells the model _who said what_, so it can tell your questions apart from its own earlier answers. LangChain accepts these plain objects directly and converts them internally into message classes. You can write the same message with the classes if you prefer:
 
 ```js
 import { HumanMessage } from "@langchain/core/messages"; // installed together with LangChain
 
-new HumanMessage("Hello!");   // same as { role: "user", content: "Hello!" }
+new HumanMessage("Hello!"); // same as { role: "user", content: "Hello!" }
 ```
 
 #### All the roles and what each is used for
 
-| Role | Class equivalent | Who creates it | Purpose |
-|---|---|---|---|
-| `system` | `SystemMessage` | You (the developer) | Standing instructions: personality, rules, today's date, output style. Usually the **first** message. |
-| `user` | `HumanMessage` | The person chatting | Their questions and requests. |
-| `assistant` | `AIMessage` | The model | The model's replies. When the model wants to use a tool, its message carries a **tool call request** instead of (or along with) text. |
-| `tool` | `ToolMessage` | Your tool function's result | The output of a tool, sent back to the model so it can continue. Linked to the request by a `tool_call_id`. |
+| Role        | Class equivalent | Who creates it              | Purpose                                                                                                                               |
+| ----------- | ---------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `system`    | `SystemMessage`  | You (the developer)         | Standing instructions: personality, rules, today's date, output style. Usually the **first** message.                                 |
+| `user`      | `HumanMessage`   | The person chatting         | Their questions and requests.                                                                                                         |
+| `assistant` | `AIMessage`      | The model                   | The model's replies. When the model wants to use a tool, its message carries a **tool call request** instead of (or along with) text. |
+| `tool`      | `ToolMessage`    | Your tool function's result | The output of a tool, sent back to the model so it can continue. Linked to the request by a `tool_call_id`.                           |
 
 LangChain also accepts the aliases `"human"` for `user` and `"ai"` for `assistant`.
 
@@ -139,12 +138,22 @@ LangChain also accepts the aliases `"human"` for `user` and `"ai"` for `assistan
 
 ```js
 [
-  { role: "system",    content: "You are a calendar assistant." },
-  { role: "user",      content: "Add gym on 5 Dec" },
-  { role: "assistant", content: "", tool_calls: [{ id: "call_1", name: "CreateEvent", args: { date: "5 Dec", title: "Gym", description: "Gym session" } }] },
-  { role: "tool",      content: "Event created", tool_call_id: "call_1" },
+  { role: "system", content: "You are a calendar assistant." },
+  { role: "user", content: "Add gym on 5 Dec" },
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [
+      {
+        id: "call_1",
+        name: "CreateEvent",
+        args: { date: "5 Dec", title: "Gym", description: "Gym session" },
+      },
+    ],
+  },
+  { role: "tool", content: "Event created", tool_call_id: "call_1" },
   { role: "assistant", content: "Done! I've added gym on 5 Dec." },
-]
+];
 ```
 
 #### Why the correct role matters
@@ -334,11 +343,11 @@ A terminal assistant that can **create** and **list** calendar events by calling
 
 ### 4.2 Key concepts
 
-| Term | Meaning |
-|---|---|
-| **Tool** | A function plus a name, description and input schema that the model can request to run. |
-| **Agent** | A loop that lets the model think, call tools, read the results, and continue until it can give a final answer. |
-| **Schema** | A description of the tool's inputs, written with Zod. |
+| Term       | Meaning                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------- |
+| **Tool**   | A function plus a name, description and input schema that the model can request to run.                        |
+| **Agent**  | A loop that lets the model think, call tools, read the results, and continue until it can give a final answer. |
+| **Schema** | A description of the tool's inputs, written with Zod.                                                          |
 
 > The model never runs your code. It only produces a **request** ("call `CreateEvent` with these arguments"). The agent runs the function and sends the result back.
 
@@ -372,8 +381,8 @@ const myTool = tool(
 import { createAgent } from "langchain";
 
 const agent = createAgent({
-  model,                 // the ChatGroq instance
-  tools: [myTool],       // list of tools it may call
+  model, // the ChatGroq instance
+  tools: [myTool], // list of tools it may call
   // systemPrompt: "..." // optional instructions
 });
 ```
@@ -382,8 +391,8 @@ const agent = createAgent({
 
 ```js
 const stream = await agent.stream(
-  { messages: [{ role: "user", content: "..." }] },  // argument 1: the input
-  { streamMode: "messages" },                        // argument 2: the options
+  { messages: [{ role: "user", content: "..." }] }, // argument 1: the input
+  { streamMode: "messages" }, // argument 2: the options
 );
 ```
 
@@ -511,7 +520,7 @@ So writing clear, specific descriptions is the main way to control tool-use beha
 In `tools.js` every loop iteration sends **only the new user message**:
 
 ```js
-messages: [{ role: "user", content: userinput }]
+messages: [{ role: "user", content: userinput }];
 ```
 
 That means each request starts with a fresh conversation, so the agent does not recall earlier turns of chat. The `event` array does persist for the session, which is why `getEvents` can still list events created earlier, because that data lives in your code, not in the model's memory. To give the agent conversational memory as well, use the pattern from Project 1 (see section 6).
@@ -527,10 +536,10 @@ agent.stream(
 );
 ```
 
-| Argument | What it is | Details |
-|---|---|---|
-| **1. input** | The starting state | The key must be named `messages`. Its value is the array of message objects the agent should read. |
-| **2. options** | A configuration object | Named settings. `streamMode` is just **one** of the keys you can put in it. |
+| Argument       | What it is             | Details                                                                                            |
+| -------------- | ---------------------- | -------------------------------------------------------------------------------------------------- |
+| **1. input**   | The starting state     | The key must be named `messages`. Its value is the array of message objects the agent should read. |
+| **2. options** | A configuration object | Named settings. `streamMode` is just **one** of the keys you can put in it.                        |
 
 Why an object and not a plain string or a third positional argument?
 
@@ -548,7 +557,7 @@ In `"messages"` mode, every item the stream produces is a **2-element array**: t
 
 ```js
 // What one item looks like:
-[ messageChunk, metadata ]
+[messageChunk, metadata];
 ```
 
 Destructuring is just a shortcut for picking array elements by position. These two loops do exactly the same thing:
@@ -556,8 +565,8 @@ Destructuring is just a shortcut for picking array elements by position. These t
 ```js
 // Long way
 for await (const item of stream) {
-  const chunk = item[0];      // the message piece (has .content)
-  const metadata = item[1];   // info such as which step of the agent produced it
+  const chunk = item[0]; // the message piece (has .content)
+  const metadata = item[1]; // info such as which step of the agent produced it
   process.stdout.write(chunk.content);
 }
 
@@ -576,7 +585,7 @@ for await (const [chunk] of stream) {
 ### 4.10 Why does the second tool have an empty `z.object({})`?
 
 ```js
-schema: z.object({})
+schema: z.object({});
 ```
 
 **Reason:** every tool has to describe its inputs. LangChain converts the schema into a JSON Schema that is sent to the model together with the tool's name and description. The model uses it to know what arguments it must supply.
@@ -593,7 +602,7 @@ schema: z.object({})
 ```js
 schema: z.object({
   date: z.string().optional().describe("Only return events on this date"),
-})
+});
 ```
 
 `.describe("...")` adds a short hint on a field that the model can read, which helps it fill in the argument correctly. It is optional but useful on any field.
@@ -604,11 +613,11 @@ schema: z.object({
 
 `agent.stream(input, { streamMode })` supports different modes that control **what** each yielded item contains.
 
-| Mode | Each item contains | Typical use |
-|---|---|---|
-| `"values"` | The **full state** (all messages so far) after each step of the agent loop | Getting the final complete message list, e.g. to save history |
-| `"messages"` | `[messageChunk, metadata]` tuples, streamed **token by token** | Live typing effect in the UI |
-| `"updates"` | Only what each step **changed** | Debugging and tracing which step did what |
+| Mode         | Each item contains                                                         | Typical use                                                   |
+| ------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `"values"`   | The **full state** (all messages so far) after each step of the agent loop | Getting the final complete message list, e.g. to save history |
+| `"messages"` | `[messageChunk, metadata]` tuples, streamed **token by token**             | Live typing effect in the UI                                  |
+| `"updates"`  | Only what each step **changed**                                            | Debugging and tracing which step did what                     |
 
 Quick rule:
 
@@ -669,10 +678,10 @@ while (true) {
 
 The two projects have **different goals**, so they use different modes:
 
-| | Goal | Mode |
-|---|---|---|
-| Project 2 | Show the reply live as it is generated | `"messages"` |
-| Combined version | Get the **complete conversation** after each turn so it can be saved as memory | `"values"` |
+|                  | Goal                                                                           | Mode         |
+| ---------------- | ------------------------------------------------------------------------------ | ------------ |
+| Project 2        | Show the reply live as it is generated                                         | `"messages"` |
+| Combined version | Get the **complete conversation** after each turn so it can be saved as memory | `"values"`   |
 
 `"messages"` only gives you small text pieces. You would have to stitch them together yourself, and you would not get a tidy list that includes the tool call and tool result messages.
 
@@ -691,19 +700,19 @@ Because every chunk is already the full state, the code simply overwrites `final
 
 ```js
 const result = await agent.invoke({ messages });
-messages = result.messages;               // needs `let messages` instead of `const`
+messages = result.messages; // needs `let messages` instead of `const`
 console.log(result.messages.at(-1).content);
 ```
 
 ### The memory lines explained
 
-| Line | What it does |
-|---|---|
-| `let finalMessages = messages;` | A fallback starting value, so the variable is never empty even if the stream yields nothing. |
-| `finalMessages = chunk.messages;` | Keeps the newest full state; the last one wins. |
-| `finalMessages[finalMessages.length - 1]` | The last message in the list, which is the assistant's final text reply. |
-| `messages.length = 0;` | Empties the array **in place**. This is needed because `messages` is declared with `const`, so it cannot be reassigned. |
-| `messages.push(...finalMessages);` | Refills it. The `...` (spread) expands the array into separate arguments. |
+| Line                                      | What it does                                                                                                            |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `let finalMessages = messages;`           | A fallback starting value, so the variable is never empty even if the stream yields nothing.                            |
+| `finalMessages = chunk.messages;`         | Keeps the newest full state; the last one wins.                                                                         |
+| `finalMessages[finalMessages.length - 1]` | The last message in the list, which is the assistant's final text reply.                                                |
+| `messages.length = 0;`                    | Empties the array **in place**. This is needed because `messages` is declared with `const`, so it cannot be reassigned. |
+| `messages.push(...finalMessages);`        | Refills it. The `...` (spread) expands the array into separate arguments.                                               |
 
 ### Why replace the history instead of just pushing the final reply?
 
@@ -715,16 +724,16 @@ The agent's returned list already contains everything that happened this turn, i
 
 Most of the "weird looking" syntax in these projects is just curly braces and square brackets used in different ways. Here is every appearance in one place.
 
-| Code | What it is | Explanation |
-|---|---|---|
-| `{ role: "user", content: userinput }` | Object literal | A message. Property names on the left, values on the right. |
-| `{ messages }` | Shorthand property | Same as `{ messages: messages }`. When the key and the variable have the same name you can write it once. |
-| `createAgent({ model, tools })` | Object of options (with shorthand) | Same as `{ model: model, tools: tools }`. |
-| `{ streamMode: "messages" }` | Options object | A configuration object passed as the 2nd argument. |
-| `async function ({ date, title, description })` | **Object** destructuring in parameters | The tool receives one object and pulls out three named properties from it. |
-| `for await (const [chunk] of stream)` | **Array** destructuring | Takes the first element of a 2-element array by position. |
-| `chunk.messages` | Property access | Reads one property from an object. |
-| `messages.push(...finalMessages)` | Spread operator | Expands an array into separate arguments. |
+| Code                                            | What it is                             | Explanation                                                                                               |
+| ----------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `{ role: "user", content: userinput }`          | Object literal                         | A message. Property names on the left, values on the right.                                               |
+| `{ messages }`                                  | Shorthand property                     | Same as `{ messages: messages }`. When the key and the variable have the same name you can write it once. |
+| `createAgent({ model, tools })`                 | Object of options (with shorthand)     | Same as `{ model: model, tools: tools }`.                                                                 |
+| `{ streamMode: "messages" }`                    | Options object                         | A configuration object passed as the 2nd argument.                                                        |
+| `async function ({ date, title, description })` | **Object** destructuring in parameters | The tool receives one object and pulls out three named properties from it.                                |
+| `for await (const [chunk] of stream)`           | **Array** destructuring                | Takes the first element of a 2-element array by position.                                                 |
+| `chunk.messages`                                | Property access                        | Reads one property from an object.                                                                        |
+| `messages.push(...finalMessages)`               | Spread operator                        | Expands an array into separate arguments.                                                                 |
 
 Rule of thumb:
 
@@ -735,10 +744,10 @@ Rule of thumb:
 
 ## 8. Small Details Worth Knowing
 
-- **`import "dotenv/config"`** is a *side-effect import*: it has no name, it just runs dotenv immediately. It must run before any code reads `process.env`, so keep it near the top.
-- **`import * as z from "zod"`** is a *namespace import*: everything Zod exports becomes available under the name `z` (`z.object`, `z.string`, ...).
+- **`import "dotenv/config"`** is a _side-effect import_: it has no name, it just runs dotenv immediately. It must run before any code reads `process.env`, so keep it near the top.
+- **`import * as z from "zod"`** is a _namespace import_: everything Zod exports becomes available under the name `z` (`z.object`, `z.string`, ...).
 - **`process.stdout.write()` vs `console.log()`**: `console.log` always adds a newline, while `process.stdout.write` does not. That is why it is used for streaming, so chunks join into one continuous line. The extra `process.stdout.write("\n")` after the loop ends the line.
-- **`for await ... of`** loops over something that produces values over time (an *async iterable*). Each pass of the loop waits for the next chunk.
+- **`for await ... of`** loops over something that produces values over time (an _async iterable_). Each pass of the loop waits for the next chunk.
 - **Top-level `await`** (using `await` outside a function) works only in ES modules, which is why `"type": "module"` is needed.
 - **Tool functions run in your Node process.** A `console.log` inside a tool prints into the terminal at the moment the tool runs, which can appear in the middle of streamed output.
 - **Tool return values** should be strings (or JSON turned into a string with `JSON.stringify`) because they become the `content` of a `tool` message the model reads.
@@ -756,16 +765,16 @@ Rule of thumb:
 
 ## 9. Glossary
 
-| Term | Definition |
-|---|---|
-| **LLM** | Large Language Model, a model that predicts text from an input conversation. |
-| **Stateless** | Keeps no memory between calls; everything it needs must be sent each time. |
-| **Context window** | The maximum amount of text (tokens) a model can read in one request. |
-| **Token** | A small unit of text (part of a word) that models read and generate. |
-| **Chunk** | One small piece of a streamed response. |
+| Term                        | Definition                                                                             |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| **LLM**                     | Large Language Model, a model that predicts text from an input conversation.           |
+| **Stateless**               | Keeps no memory between calls; everything it needs must be sent each time.             |
+| **Context window**          | The maximum amount of text (tokens) a model can read in one request.                   |
+| **Token**                   | A small unit of text (part of a word) that models read and generate.                   |
+| **Chunk**                   | One small piece of a streamed response.                                                |
 | **Tool / function calling** | The model's ability to request that a defined function be run with specific arguments. |
-| **Agent** | A loop combining a model and tools that continues until a final answer is produced. |
-| **ReAct loop** | Reason → Act (call a tool) → Observe (read the result) → repeat. |
-| **Schema (Zod)** | A declaration of the shape and types of data, used here for tool arguments. |
-| **ES modules** | The `import`/`export` module system, enabled with `"type": "module"`. |
-| **Top-level await** | Using `await` outside a function, which works in ES modules. |
+| **Agent**                   | A loop combining a model and tools that continues until a final answer is produced.    |
+| **ReAct loop**              | Reason → Act (call a tool) → Observe (read the result) → repeat.                       |
+| **Schema (Zod)**            | A declaration of the shape and types of data, used here for tool arguments.            |
+| **ES modules**              | The `import`/`export` module system, enabled with `"type": "module"`.                  |
+| **Top-level await**         | Using `await` outside a function, which works in ES modules.                           |
