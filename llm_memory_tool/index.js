@@ -1,14 +1,12 @@
-import { ChatGroq } from "@langchain/groq";
-import "dotenv/config";
-import { stdout } from "process";
-import rl from "readline/promises";
+// memory of LLM
 
-import * as z from "zod";
-import { tool, createAgent } from "langchain";
+import "dotenv/config";
+import { ChatGroq } from "@langchain/groq";
+import rl from "readline/promises";
 
 const readline = rl.createInterface({
   input: process.stdin,
-  output: stdout,
+  output: process.stdout,
 });
 
 const model = new ChatGroq({
@@ -16,65 +14,33 @@ const model = new ChatGroq({
   apiKey: process.env.groq_api_key,
 });
 
-const events = [];
 const messages = [];
 
-const createEventTool = tool(
-  async ({ date, title, description }) => {
-    console.log("\nCreating event ", { date, title, description });
-    events.push({ date, title, description });
-    return "Event Created";
-  },
-  {
-    name: "Create_Event",
-    description: "Create a new event with date, title and description",
-    schema: z.object({
-      date: z.string(),
-      title: z.string(),
-      description: z.string(),
-    }),
-  },
-);
-
-const getEventTool = tool(
-  async () => JSON.stringify(events), // return a string
-  {
-    name: "Get_Events",
-    description: "Retrieve all events the user has created",
-    schema: z.object({}),
-  },
-);
-
-const agent = createAgent({
-  model,
-  tools: [createEventTool, getEventTool],
-  // systemPrompt:
-  //   "You are a helpful assistant that manages the user's calendar events. " +
-  //   "Always use Get_Events to list events and Create_Event to add them. " +
-  //   "Never invent events.",
-});
-
 while (true) {
-  const userinput = await readline.question("\nEnter your input : ");
+  const userinput = await readline.question("Enter your input :  ");
 
-  if (userinput.trim().toLowerCase() === "exit") break;
-
-  messages.push({ role: "user", content: userinput });
-
-  const stream = await agent.stream({ messages }, { streamMode: "values" });
-
-  let finalMessages = messages;
-  for await (const chunk of stream) {
-    finalMessages = chunk.messages;
+  if (userinput.trim().toLowerCase() === "exit") {
+    break;
   }
 
-  // Print only the final assistant reply
-  const last = finalMessages[finalMessages.length - 1];
-  console.log(last.content);
+  messages.push({
+    role: "user",
+    content: userinput,
+  });
 
-  // Replace history with the full result (includes tool calls + tool results)
-  messages.length = 0;
-  messages.push(...finalMessages);
+  const stream = await model.stream(messages);
+
+  let clankers_response = "";
+  for await (const chunk of stream) {
+    clankers_response += chunk.content;
+    process.stdout.write(chunk.content);
+  }
+
+  messages.push({
+    role: "assistant",
+    content: clankers_response,
+  });
+
+  process.stdout.write("\n");
 }
-
 readline.close();
